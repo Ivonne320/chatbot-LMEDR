@@ -52,10 +52,17 @@ def create_data(data_file):
                     persona.append(tmp_persona)
                     is_persona = False
                     tmp_persona = []
-                line = line[line.find(" ")+1:]
-                tmp_query.append(line.split("\t")[0])
-                tmp_response.append(line.split("\t")[1])
-                tmp_cand.append(line.split("\t")[3].split("|"))
+                split_line = line.split("\t")
+                if len(split_line) >= 4:
+                    tmp_query.append(split_line[0])
+                    tmp_response.append(split_line[1])  
+                    tmp_cand.append(split_line[3].split("|"))
+                else:
+                    print(f"Warning: Line {cnt} in {data_file} is improperly formatted.")
+                # line = line[line.find(" ")+1:]
+                # tmp_query.append(line.split("\t")[0])
+                # tmp_response.append(line.split("\t")[1])
+                # tmp_cand.append(line.split("\t")[3].split("|"))
         query.append(tmp_query)
         response.append(tmp_response)
         cand.append(tmp_cand)

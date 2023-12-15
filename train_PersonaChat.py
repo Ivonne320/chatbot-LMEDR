@@ -132,10 +132,10 @@ if __name__ == '__main__':
     logger.info("Complete loading model.")
 
     logger.info("Build train data")
-    persona, query, response, cand = create_data(f"data/ConvAI2/train_self{data_from}.txt")
+    persona, query, response, cand = create_data(f"data/ConvAI2/peacoked/train_self{data_from}.txt")
     train_data = build_dataloader(persona, query, response, cand, tokenizer, max_history=args.max_history, n_cand=args.cand)
     logger.info("Build valid data")
-    persona, query, response, cand = create_data(f"data/ConvAI2/valid_self{data_from}.txt")
+    persona, query, response, cand = create_data(f"data/ConvAI2/peacoked/valid_self{data_from}.txt")
     val_data = build_dataloader(persona, query, response, cand, tokenizer, max_history=args.max_history, use_all=True)
     logger.info("Build infer data")
     infer_data = build_infer_dataset(tokenizer, "data/dnli/dialogue_nli_train.jsonl")
