@@ -15,7 +15,7 @@ from ignite.contrib.handlers import ProgressBar, PiecewiseLinear
 from ignite.contrib.handlers.tensorboard_logger import TensorboardLogger, OutputHandler, OptimizerParamsHandler
 import math
 from pprint import pformat
-from build_data_PersonaChat import create_data, build_dataloader, build_infer_dataset
+from build_data_PersonaChat_partner import create_data_with_partner, build_dataloader, build_infer_dataset
 
 
 def average_distributed_scalar(scalar, args):
@@ -84,7 +84,7 @@ def init_config():
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    add_special_tokens = {'additional_special_tokens': ['<query>', '<response>', '<latent>', '<persona>']}
+    add_special_tokens = {'additional_special_tokens': ['<query>', '<response>', '<latent>', '<persona>', '<partner>']}
     args = init_config()
     if args.revised:
         data_from = "_revised"
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     if not args.eval:
         if not os.path.exists(os.path.join(args.output_dir + data_from)):
             os.makedirs(os.path.join(args.output_dir + data_from))
-        log_file = os.path.join(args.output_dir + data_from, "train.log")
+        log_file = os.path.join(args.output_dir + data_from, "train_with_partner_retrived.log")
     else:
         log_file = os.path.join(args.load_from, "eval.log")
 
@@ -132,11 +132,11 @@ if __name__ == '__main__':
     logger.info("Complete loading model.")
 
     logger.info("Build train data")
-    persona, query, response, cand = create_data(f"data/ConvAI2/peacoked/train_self{data_from}.txt")
-    train_data = build_dataloader(persona, query, response, cand, tokenizer, max_history=args.max_history, n_cand=args.cand)
+    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/train_self{data_from}.txt")
+    train_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, n_cand=args.cand)
     logger.info("Build valid data")
-    persona, query, response, cand = create_data(f"data/ConvAI2/peacoked/valid_self{data_from}.txt")
-    val_data = build_dataloader(persona, query, response, cand, tokenizer, max_history=args.max_history, use_all=True)
+    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/valid_self{data_from}.txt")
+    val_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, use_all=True)
     logger.info("Build infer data")
     infer_data = build_infer_dataset(tokenizer, "data/dnli/dialogue_nli_train.jsonl")
 
@@ -176,10 +176,10 @@ if __name__ == '__main__':
     infer_sampler = torch.utils.data.distributed.DistributedSampler(infer_dataset) if args.distributed else None
     val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset) if args.distributed else None
     train_loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size,
-                              shuffle=(not args.distributed), num_workers=2)
+                              shuffle=(not args.distributed), num_workers=6)
     infer_loader = DataLoader(infer_dataset, sampler=infer_sampler, batch_size=args.infer_batch_size,
-                              shuffle=(not args.distributed), num_workers=2)
-    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False)
+                              shuffle=(not args.distributed), num_workers=6)
+    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False, num_workers=6)
 
     train_iter = len(train_loader)
 
