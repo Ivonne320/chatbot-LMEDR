@@ -59,6 +59,7 @@ def init_config():
                         help="Accumulate gradients on several steps")
     parser.add_argument('--cand', type=int, default=5, help='number of candidate')
     parser.add_argument("--max_history", type=int, default=4, help="length of dialogue context")
+    parser.add_argument("--file_name", type=str, default=None, help="training file name")
 
 
     args = parser.parse_args()
@@ -86,15 +87,15 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     add_special_tokens = {'additional_special_tokens': ['<query>', '<response>', '<latent>', '<persona>', '<partner>']}
     args = init_config()
-    if args.revised:
-        data_from = "_revised"
-    else:
-        data_from = "_original"
+    # if args.revised:
+    #     data_from = "_revised"
+    # else:
+    #     data_from = "_original"
 
     if not args.eval:
-        if not os.path.exists(os.path.join(args.output_dir + data_from)):
-            os.makedirs(os.path.join(args.output_dir + data_from))
-        log_file = os.path.join(args.output_dir + data_from, "train_with_partner_retrived.log")
+        if not os.path.exists(os.path.join(args.output_dir + args.file_name)):
+            os.makedirs(os.path.join(args.output_dir + args.file_name))
+        log_file = os.path.join(args.output_dir + args.file_name, ".log")
     else:
         log_file = os.path.join(args.load_from, "eval.log")
 
@@ -132,10 +133,10 @@ if __name__ == '__main__':
     logger.info("Complete loading model.")
 
     logger.info("Build train data")
-    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/train_self{data_from}.txt")
+    persona, partner, query, response, cand = create_data_with_partner(f"./data/ConvAI2/retrieve_induced/train_persona_original_chat_ext_retrieved_induced_{args.file_name}.txt")
     train_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, n_cand=args.cand)
     logger.info("Build valid data")
-    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/valid_self{data_from}.txt")
+    persona, partner, query, response, cand = create_data_with_partner(f"./data/ConvAI2/retrieve_induced/valid_persona_original_chat_ext_retrieved_induced_{args.file_name}.txt")
     val_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, use_all=True)
     logger.info("Build infer data")
     infer_data = build_infer_dataset(tokenizer, "data/dnli/dialogue_nli_train.jsonl")
@@ -176,10 +177,10 @@ if __name__ == '__main__':
     infer_sampler = torch.utils.data.distributed.DistributedSampler(infer_dataset) if args.distributed else None
     val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset) if args.distributed else None
     train_loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size,
-                              shuffle=(not args.distributed), num_workers=6)
+                              shuffle=(not args.distributed), num_workers=0)
     infer_loader = DataLoader(infer_dataset, sampler=infer_sampler, batch_size=args.infer_batch_size,
-                              shuffle=(not args.distributed), num_workers=6)
-    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False, num_workers=6)
+                              shuffle=(not args.distributed), num_workers=0)
+    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False, num_workers=0)
 
     train_iter = len(train_loader)
 
@@ -350,7 +351,7 @@ if __name__ == '__main__':
             evaluator.add_event_handler(Events.COMPLETED,
                                         lambda __: logger.info("Validation: %s" % pformat(evaluator.state.metrics)))
 
-            log_dir = os.path.join(args.output_dir + data_from)
+            log_dir = os.path.join(args.output_dir + args.file_name)
             tb_logger = TensorboardLogger(log_dir)
             tb_logger.attach(infer_trainer, log_handler=OutputHandler(tag="infer", metric_names=["loss"]),
                              event_name=Events.ITERATION_COMPLETED)

@@ -294,11 +294,19 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
     
     for i in range(num_dialogues):
         persona_ = [] if len(persona) == 0 else persona[i]
+        partner_persona_ = None if partner_persona is None else partner_persona[i]
         per_list = []
+        tmp_partner_per_list = []
         for per in persona_:
             persona_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(per, add_prefix_space=True))
             per_list.append(persona_ids)
-        partner_persona_ = None if partner_persona is None else partner_persona[i]
+        if partner_persona is not None:
+            for par_per in partner_persona_:
+                # if j < len(partner_persona_):
+                    # last_known_partner_per = partner_persona_[j]
+                # for partner_per_item in last_known_partner_per:
+                partner_persona_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(par_per, add_prefix_space=True))
+                tmp_partner_per_list.append(partner_persona_ids)
         query_ = query[i]
         response_ = response[i]
         cand_ = cand[i]
@@ -306,12 +314,7 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
         assert len(query_) == len(response_)
         
         # Iterating over turns of dialogue history
-        print("len(query_)", len(query_))
-        print("query_", query_)
-        print("len(persona_)", len(persona_))
-        print("persona_", persona_)
-        print("len(partner_persona_)", len(partner_persona_))
-        last_known_partner_per = []
+        
         for j in range(len(query_)):
             if use_all:
                 noise_candidate = cand_[j][:-1]
@@ -319,15 +322,15 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
                 noise_candidate = random.sample(cand_[j][:-1], n_cand-1)
                 
             # Take the induced persona from turn j and format the same way as per_list
-            tmp_partner_per_list = []
-            if partner_persona is not None:
-                if j < len(partner_persona_):
-                    last_known_partner_per = partner_persona_[j]
-                for partner_per_item in last_known_partner_per:
-                    partner_persona_ids = tokenizer.convert_tokens_to_ids(
-                        tokenizer.tokenize(partner_per_item, add_prefix_space=True)
-                            )
-                    tmp_partner_per_list.append(partner_persona_ids)
+            # tmp_partner_per_list = []
+            # if partner_persona is not None:
+            #     if j < len(partner_persona_):
+            #         last_known_partner_per = partner_persona_[j]
+            #     for partner_per_item in last_known_partner_per:
+            #         partner_persona_ids = tokenizer.convert_tokens_to_ids(
+            #             tokenizer.tokenize(partner_per_item, add_prefix_space=True)
+            #                 )
+            #         tmp_partner_per_list.append(partner_persona_ids)
                     
 
             query_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(query_[j], add_prefix_space=True))
