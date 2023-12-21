@@ -1,0 +1,48 @@
+[
+  {
+    "turn_0": {
+      "persona A": [
+        
+      ],
+      "persona B": [
+        "i listen to rap music.",
+        "i produce music for artists.",
+        "i drive a 2015 honda civic.",
+        "my favourite food is pizza."
+      ],
+      "dialogue": [
+        {
+          "persona_id": "A",
+          "text": "hi , how are you ? do you have any brothers or sisters ?"
+        },
+        {
+          "persona_id": "B",
+          "text": "no i don’t do you ?"
+        },
+        {
+          "persona_id": "A",
+          "text": "yes , i’m 13 and i’ve an older brother ."
+        },
+        {
+          "persona_id": "B",
+          "text": "that’s nice what kind of music do you like"
+        },
+        {
+          "persona_id": "A",
+          "text": "i do not have much time as i play soccer . you ?"
+        },
+        {
+          "persona_id": "B",
+          "text": "i am a music producer for rap artists"
+        },
+        {
+          "persona_id": "A",
+          "text": "cool i like rap . i hate maths though ! do you have other hobbies"
+        }
+      ],
+      "gold_reference": "I would love to join you for a meal! And in return I'll invite you to my future office at the top of the tallest building in the world!"
+    },
+    "dialog_id": "Dialog_DUMMY_0000"
+  }
+  
+]
