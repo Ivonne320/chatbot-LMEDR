@@ -18,10 +18,10 @@ import math
 from pprint import pformat
 from build_data_PersonaChat import create_data, build_dataloader, build_infer_dataset
 
-checkpoint = torch.load('/home/yiwang/chatbot-LMEDR/persona_original/checkpoint_mymodel_3126.pt', map_location='cpu')
+checkpoint = torch.load('/home/yiwang/chatbot-LMEDR/10_2_original/checkpoint_mymodel_1563.pt', map_location='cpu')
 config = BartConfig(vocab_size=50269,num_labels=1)
 tokenizer = BartTokenizer.from_pretrained("facebook/bart-large")
-add_special_tokens = {'additional_special_tokens': ['<query>', '<response>', '<latent>', '<persona>']}
+add_special_tokens = {'additional_special_tokens': ['<query>', '<response>', '<latent>', '<persona>','<partner>']}
 num_added_toks = tokenizer.add_special_tokens(add_special_tokens)
 # logger.info('We have added {} tokens'.format(num_added_toks))
 model = LMEDRModel.from_pretrained("facebook/bart-large", num_labels=1,
@@ -32,7 +32,6 @@ model.config.decoder_start_token_id = tokenizer.convert_tokens_to_ids('<response
 model.config.forced_bos_token_id = None
 model.load_state_dict(checkpoint)
 print(model.state_dict().keys())
-torch.save(model.state_dict(), '/home/yiwang/chatbot-LMEDR/persona_original/checkpoint/pytorch_model.bin')
+torch.save(model.state_dict(), '/home/yiwang/chatbot-LMEDR/10_2_original/checkpoint/pytorch_model.bin')
 
-# torch.save(torch.randn(10, 10), '/home/yiwang/chatbot-LMEDR/persona_original/checkpoint/dummy.pt')
 

@@ -1,1 +1,11 @@
 ParlAI/
+__pycache__/
+slurm*
+*.pt
+events*
+*.bin
+*.txt
+*.json
+*.log
+*.jsonl
+

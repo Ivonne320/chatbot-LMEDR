@@ -132,10 +132,12 @@ if __name__ == '__main__':
     logger.info("Complete loading model.")
 
     logger.info("Build train data")
-    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/train_self{data_from}.txt")
+    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/peacoked/train_self{data_from}.txt")
+    # persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieved_{args.output_dir}/train_self{data_from}.txt")
     train_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, n_cand=args.cand)
     logger.info("Build valid data")
-    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieve_induced/valid_self{data_from}.txt")
+    persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/peacoked/valid_self{data_from}.txt")
+    # persona, partner, query, response, cand = create_data_with_partner(f"data/ConvAI2/retrieved_{args.output_dir}/valid_self{data_from}.txt")
     val_data = build_dataloader(persona, query, response, cand, tokenizer, partner_persona=partner, max_history=args.max_history, use_all=True)
     logger.info("Build infer data")
     infer_data = build_infer_dataset(tokenizer, "data/dnli/dialogue_nli_train.jsonl")
@@ -176,10 +178,10 @@ if __name__ == '__main__':
     infer_sampler = torch.utils.data.distributed.DistributedSampler(infer_dataset) if args.distributed else None
     val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset) if args.distributed else None
     train_loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size,
-                              shuffle=(not args.distributed), num_workers=6)
+                              shuffle=(not args.distributed), num_workers=4)
     infer_loader = DataLoader(infer_dataset, sampler=infer_sampler, batch_size=args.infer_batch_size,
-                              shuffle=(not args.distributed), num_workers=6)
-    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False, num_workers=6)
+                              shuffle=(not args.distributed), num_workers=4)
+    val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.valid_batch_size, shuffle=False, num_workers=4)
 
     train_iter = len(train_loader)
 
@@ -350,7 +352,7 @@ if __name__ == '__main__':
             evaluator.add_event_handler(Events.COMPLETED,
                                         lambda __: logger.info("Validation: %s" % pformat(evaluator.state.metrics)))
 
-            log_dir = os.path.join(args.output_dir + data_from)
+            log_dir = os.path.join(args.output_dir + data_from )
             tb_logger = TensorboardLogger(log_dir)
             tb_logger.attach(infer_trainer, log_handler=OutputHandler(tag="infer", metric_names=["loss"]),
                              event_name=Events.ITERATION_COMPLETED)
