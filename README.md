@@ -1,5 +1,8 @@
-# LMEDR <img src="https://pytorch.org/assets/images/logo-dark.svg" width = "90" />
-Code for AAAI 2023 paper: [Learning to Memorize Entailment and Discourse Relations for Persona-Consistent Dialogues](https://arxiv.org/pdf/2301.04871.pdf).
+# Machine Learning @EPFL 2023
+### Code for Commonsense Persona-Grounded Dialogue Challenge ([CPDC 2023](https://www.aicrowd.com/challenges/commonsense-persona-grounded-dialogue-challenge-2023/problems/task-1-commonsense-dialogue-response-generation/submissions)). 
+Adjusted from [LMEDR](https://github.com/Chenrj233/LMEDR.git) official implementation
+### Team @[Zewei Zhang](https://github.com/Takui9), @[Yihan Wang](https://github.com/Ivonne320)
+
 
 ## Requirements
 
@@ -14,7 +17,7 @@ Please install ParlAI, which can be done in the following ways
 ```bash
 git clone https://github.com/Chenrj233/ParlAI.git
 cd ParlAI
-python setup.py install
+python setup.py install # you can try <pip install -e . --no-cache-dir> instead in case of failure
 ```
 
 Please replace `eval_f1.py` and `eval_hits.py` in `/ParlAI/projects/convai2/` with the corresponding files in `/other/`. Similarly, replace the `generation_utils.py` in `transformers/` with the corresponding files in `/other/`, the file is in a path similar to
@@ -29,21 +32,29 @@ Please replace `eval_f1.py` and `eval_hits.py` in `/ParlAI/projects/convai2/` wi
 
 ## Data
 
-The datasets used in the paper can be obtained from the following link:
+The datasets processed and used in this project can be obtained from the following link:
 
-|  Dataset| Paper  |
+|  Dataset| Used in  |
 |  ----   |  ----  |
-|  [ConvAI2 PersonaChat](http://parl.ai/downloads/convai2/convai2_fix_723.tgz) | [The Second Conversational Intelligence Challenge (ConvAI2)](https://link.springer.com/chapter/10.1007/978-3-030-29135-8_7)  |
-| [DSTC7-AVSD](https://drive.google.com/open?id=1SlZTySJAk_2tiMG5F8ivxCfOl_OWwd_Q) | [Audio Visual Scene-aware dialog (AVSD) Track for Natural Language Generation in DSTC7](http://workshop.colips.org/dstc7/papers/DSTC7_Task_3_overview_paper.pdf)  |
-| [MNLI](https://cims.nyu.edu/~sbowman/multinli/multinli_1.0.zip) | [ A broad-coverage challenge corpus for sentence understanding through inference](https://aclanthology.org/N18-1101.pdf)  |
-| [DNLI](https://wellecks.com/dialogue_nli/) | [Dialogue Natural Language Inference](https://aclanthology.org/P19-1363.pdf)  |
+|  [PersonaChat-PEACOK ](https://drive.google.com/drive/folders/1GMr4l_ORRvW2mFF6rAShjrFIG1PLfH5R?usp=sharing) | Training the DDM  |
+| [DNLI](https://wellecks.com/dialogue_nli/) | Training the ERM  |
 
+[PersonaChat-PEACOK ](https://drive.google.com/drive/folders/1GMr4l_ORRvW2mFF6rAShjrFIG1PLfH5R?usp=sharing) contains all four datasets used in our report. The details of the models and used datasets are given as follows:
+
+| Model | Dataset Used | Epoch Number
+|  ----   |  ----  | ---- |
+| Our best model | `Original_best` | 10 |
+| Case 1 (Table V) | `Induced_retrieved_2_1` | 1 |
+| Case 2 (Table V) | `Induced_retrieved_kmax5` | 1 |
+| Case 3 (Table V) | `Induced_retrieved_10_2` | 1 |
+
+Please directly download the files in folder `Dataset/LMEDR` for the LMEDR model training. 
 
 ## Training
 
-* **PersonaChat**
 
-	Use the following script to train on the PersonaChat original dataset. If you want to train on the revised dataset, please add `--revised`
+Put the downloaded datasets in corresponding subdirs in `data/`, change the datapaths in line `#135` & `#138` in ```train_PersonaChat.py``` and ```train_PersonaChat_partner.py```, use the following script to train without partner persona constraints. If you want to train on the revised dataset, please add `--revised`. We also provide a launch file ```other/chat_train.bat``` that can be used on EPFL HPC resource Scitas.
+	
 ```
 python train_PersonaChat.py --lr 8e-6 \
 --epochs 20 \
@@ -52,52 +63,46 @@ python train_PersonaChat.py --lr 8e-6 \
 --infer_batch_size 64 
 ```
 
-* **DSTC7-AVSD**
-
-	For training on DSTC7-AVSD, it can be run as
+Use the following script to train with partner persona constraints:
 ```
-python train_dstc.py --lr 8e-6 \
+python train_PersonaChat_partner.py --lr 8e-6 \
 --epochs 20 \
 --train_batch_size 2 \
 --valid_batch_size 2 \
---infer_batch_size 10
-```
-
+--infer_batch_size 64 
+``` 
 ## Evaluation
-
-* **PersonaChat**
-
-	Model checkpoints can be obtained from [persona_original](https://drive.google.com/drive/folders/1po__VfU9WxM8XUS4mOAJsfVoOrdv6B63?usp=share_link), [persona_revised](https://drive.google.com/drive/folders/1KdyrFHm808ZbWQGU0bcogQDQFciwmHx7?usp=share_link).
+Our current best-performing model checkpoints can be obtained from [here](https://drive.google.com/drive/folders/1GMr4l_ORRvW2mFF6rAShjrFIG1PLfH5R?usp=sharing), place it under ```persona_original```.
 
 - Hits@1
 ```
-python evaluation_PersonaChat.py --model_checkpoint persona_original \
+python evaluation_PersonaChat.py --model_checkpoint persona_original/Model/Original_best_model \
 --eval_type hits@1
 ```
 - F1
 ```
-python evaluation_PersonaChat.py --model_checkpoint persona_original \
+python evaluation_PersonaChat.py --model_checkpoint persona_original/Model/Original_best_model \
 --eval_type f1 \
 --beam 2 \
 --max_history 7
 ```
 - PPL
 ```
-python train_PersonaChat.py --load_from persona_original \
+python train_PersonaChat.py --load_from persona_original/Model/Original_best_model \
 --eval
 ```
 - C.Score
 
 	Please refer to [PAML](https://github.com/HLTCHKUST/PAML).
 
-* **DSTC7-AVSD**
+## Generate dialogue prediction
 
-	First, we use `dstc_generate.py` to generate the predicted response, and then use [dstc7avsd_eval](https://github.com/hudaAlamri/DSTC7-Audio-Visual-Scene-Aware-Dialog-AVSD-Challenge) to evaluate，model checkpoint can be obtained from [dstc_model](https://drive.google.com/drive/folders/1gj5qLseAeYFSBnCSaNrxe0tMX42UhW3M?usp=share_link).
+Please adjust the checkpoint path in ```Infer_Generation/agents/LMEDR_agents.py``` and run the following code to generate dialogue. We provide dummy input context in ```Infer_Generation/dummy_data.json```, you can follow the structure and create your own input data.
+
 ```
-python dstc_generate.py --load_from dstc_model \
---beam 5
+cd Infer_Generation
+python local_evaluation.py
 ```
+Check out our current best model's response: 
 
-## Results
-
-We also provide the final generated texts, which can be found in `/results/`.
+![](persona_original/assets/results.png)
