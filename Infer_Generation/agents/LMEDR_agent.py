@@ -15,8 +15,8 @@ from agents.lmedr_model.eval_utils import create_encoder_input, create_decoder_i
 class LMEDResponseAgent(object):
     def __init__(self):
         # load the model
-        # checkpoint_path = 'agents/lmedr_model/checkpoints'
-        checkpoint_path = '/home/yiwang/cpdc-task-1-starter-kit/agents/lmedr_model/checkpoints_original'
+        checkpoint_path = 'agents/lmedr_model/checkpoints'
+    
         self.tokenizer = BartTokenizer.from_pretrained(checkpoint_path)
         self.model = LMEDRModel.from_pretrained(checkpoint_path)
         self.query_id, self.res_id, self.latent_id, self.persona_id, self.partner_id = \
