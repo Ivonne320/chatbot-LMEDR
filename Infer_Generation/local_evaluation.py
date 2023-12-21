@@ -34,7 +34,7 @@ def get_responses(agent, test_data, BATCH_SIZE):
     all_responses = [{} for _ in range(len(test_data))]
     split_size = math.ceil(len(test_data) / BATCH_SIZE)
     for batch_idx in np.array_split(range(len(test_data)), split_size):
-        for turn_id in range(7):
+        for turn_id in range(1): # adjust this number according to your dummy data
             batch_inputs = [test_data[i][f"turn_{turn_id}"] for i in batch_idx]
             responses = agent.generate_responses(batch_inputs,[])
             for bi, resp in zip(batch_idx, responses):
