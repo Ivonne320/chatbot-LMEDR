@@ -284,7 +284,6 @@ def create_decoder_input(response_ids, res_id, eos_id, golden=None):
     return decoder_lmlabel, decoder_input_ids, decoder_cls_index, decoder_attention_mask
 
 
-
 def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=None, max_history=4, n_cand=5, use_all=False):
     partner_persona = None if len(partner_persona) == 0 else partner_persona
     bos_id, eos_id, pad_id, sep_id, query_id, res_id, latent_id, persona_id, partner_id = get_token_id(tokenizer)
@@ -294,11 +293,19 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
     
     for i in range(num_dialogues):
         persona_ = [] if len(persona) == 0 else persona[i]
+        partner_persona_ = None if partner_persona is None else partner_persona[i]
         per_list = []
+        tmp_partner_per_list = []
         for per in persona_:
             persona_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(per, add_prefix_space=True))
             per_list.append(persona_ids)
-        partner_persona_ = None if partner_persona is None else partner_persona[i]
+        if partner_persona is not None:
+            for par_per in partner_persona_:
+                # if j < len(partner_persona_):
+                    # last_known_partner_per = partner_persona_[j]
+                # for partner_per_item in last_known_partner_per:
+                partner_persona_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(par_per, add_prefix_space=True))
+                tmp_partner_per_list.append(partner_persona_ids)
         query_ = query[i]
         response_ = response[i]
         cand_ = cand[i]
@@ -306,12 +313,7 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
         assert len(query_) == len(response_)
         
         # Iterating over turns of dialogue history
-        print("len(query_)", len(query_))
-        print("query_", query_)
-        print("len(persona_)", len(persona_))
-        print("persona_", persona_)
-        print("len(partner_persona_)", len(partner_persona_))
-        last_known_partner_per = []
+        
         for j in range(len(query_)):
             if use_all:
                 noise_candidate = cand_[j][:-1]
@@ -319,15 +321,15 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
                 noise_candidate = random.sample(cand_[j][:-1], n_cand-1)
                 
             # Take the induced persona from turn j and format the same way as per_list
-            tmp_partner_per_list = []
-            if partner_persona is not None:
-                if j < len(partner_persona_):
-                    last_known_partner_per = partner_persona_[j]
-                for partner_per_item in last_known_partner_per:
-                    partner_persona_ids = tokenizer.convert_tokens_to_ids(
-                        tokenizer.tokenize(partner_per_item, add_prefix_space=True)
-                            )
-                    tmp_partner_per_list.append(partner_persona_ids)
+            # tmp_partner_per_list = []
+            # if partner_persona is not None:
+            #     if j < len(partner_persona_):
+            #         last_known_partner_per = partner_persona_[j]
+            #     for partner_per_item in last_known_partner_per:
+            #         partner_persona_ids = tokenizer.convert_tokens_to_ids(
+            #             tokenizer.tokenize(partner_per_item, add_prefix_space=True)
+            #                 )
+            #         tmp_partner_per_list.append(partner_persona_ids)
                     
 
             query_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(query_[j], add_prefix_space=True))
@@ -393,6 +395,115 @@ def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=
             dataset[item_name] = item
 
     return dataset
+
+# def build_dataloader(persona, query, response, cand, tokenizer, partner_persona=None, max_history=4, n_cand=5, use_all=False):
+#     partner_persona = None if len(partner_persona) == 0 else partner_persona
+#     bos_id, eos_id, pad_id, sep_id, query_id, res_id, latent_id, persona_id, partner_id = get_token_id(tokenizer)
+    
+#     num_dialogues = len(query)
+#     dataset = defaultdict(list)
+    
+#     for i in range(num_dialogues):
+#         persona_ = [] if len(persona) == 0 else persona[i]
+#         per_list = []
+#         for per in persona_:
+#             persona_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(per, add_prefix_space=True))
+#             per_list.append(persona_ids)
+#         partner_persona_ = None if partner_persona is None else partner_persona[i]
+#         query_ = query[i]
+#         response_ = response[i]
+#         cand_ = cand[i]
+#         history = []
+#         assert len(query_) == len(response_)
+        
+#         # Iterating over turns of dialogue history
+#         print("len(query_)", len(query_))
+#         print("query_", query_)
+#         print("len(persona_)", len(persona_))
+#         print("persona_", persona_)
+#         print("len(partner_persona_)", len(partner_persona_))
+#         last_known_partner_per = []
+#         for j in range(len(query_)):
+#             if use_all:
+#                 noise_candidate = cand_[j][:-1]
+#             else:
+#                 noise_candidate = random.sample(cand_[j][:-1], n_cand-1)
+                
+#             # Take the induced persona from turn j and format the same way as per_list
+#             tmp_partner_per_list = []
+#             if partner_persona is not None:
+#                 if j < len(partner_persona_):
+#                     last_known_partner_per = partner_persona_[j]
+#                 for partner_per_item in last_known_partner_per:
+#                     partner_persona_ids = tokenizer.convert_tokens_to_ids(
+#                         tokenizer.tokenize(partner_per_item, add_prefix_space=True)
+#                             )
+#                     tmp_partner_per_list.append(partner_persona_ids)
+                    
+
+#             query_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(query_[j], add_prefix_space=True))
+#             response_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(response_[j], add_prefix_space=True))
+
+#             noise_cand_ids_list = [tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text, add_prefix_space=True))
+#                            for text in noise_candidate]
+#             history.append(query_ids)
+#             history.append(response_ids)
+#             tmp_history = history[-2 * max_history: -1]
+
+#             encoder_input_ids, attention_mask, \
+#             per_input_ids, per_attention_mask = create_encoder_input_with_partner(per_list, tmp_partner_per_list, tmp_history, query_id, res_id,
+#                                                                      latent_id, persona_id, partner_id, sep_id, eos_id)
+#             decoder_lmlabel, decoder_input_ids, decoder_cls_idx,\
+#                 decoder_attention_mask = create_decoder_input(response_ids, res_id, eos_id, golden=True)
+
+#             dataset["input_ids"].append(encoder_input_ids)
+#             dataset["attention_mask"].append(attention_mask)
+#             dataset["per_input_ids"].append(per_input_ids)        
+#             dataset["per_attention_mask"].append(per_attention_mask)
+#             dataset["lmlabels"].append(decoder_lmlabel)
+#             dataset["decoder_input_ids"].append(decoder_input_ids)
+#             dataset["decoder_attention_mask"].append(decoder_attention_mask)
+#             dataset["cls_index"].append(decoder_cls_idx)
+#             dataset["clslabel"].append([0])
+#             for k in range(len(noise_cand_ids_list)):
+#                 decoder_lmlabel, decoder_input_ids, decoder_cls_idx,\
+#                     decoder_attention_mask = create_decoder_input(noise_cand_ids_list[k], res_id, eos_id, golden=False)
+#                 dataset["input_ids"].append(encoder_input_ids)
+#                 dataset["attention_mask"].append(attention_mask)
+#                 dataset["per_input_ids"].append(per_input_ids)
+#                 dataset["per_attention_mask"].append(per_attention_mask)
+#                 dataset["lmlabels"].append(decoder_lmlabel)
+#                 dataset["decoder_input_ids"].append(decoder_input_ids)
+#                 dataset["decoder_attention_mask"].append(decoder_attention_mask)
+#                 dataset["cls_index"].append(decoder_cls_idx)
+
+
+#     for item_name, item in dataset.items():
+#         if item_name == "input_ids" or item_name == "per_input_ids":
+#             item = pad_sequence([torch.from_numpy(np.array(x)) for x in item],
+#                                               batch_first=True, padding_value=pad_id)
+
+#             dataset[item_name] = item
+#         elif item_name == "lmlabels":
+#             item = pad_sequence([torch.from_numpy(np.array(x)) for x in item],
+#                                 batch_first=True, padding_value=-100)
+#             dataset[item_name] = item
+#         elif item_name == "attention_mask" or item_name == "decoder_attention_mask" or item_name == "per_attention_mask":
+#             item = pad_sequence([torch.from_numpy(np.array(x)) for x in item],
+#                                 batch_first=True, padding_value=0)
+#             dataset[item_name] = item
+#         elif item_name == "decoder_input_ids":
+#             item = pad_sequence([torch.from_numpy(np.array(x)) for x in item],
+#                                 batch_first=True, padding_value=pad_id)
+#             dataset[item_name] = item
+#         elif item_name == "clslabel":
+#             dataset[item_name] = torch.tensor(item).view(-1,1)
+#         elif item_name == "cls_index":
+#             item = pad_sequence([torch.from_numpy(np.array(x)) for x in item],
+#                                 batch_first=True, padding_value=-100)
+#             dataset[item_name] = item
+
+#     return dataset
 
 
 
